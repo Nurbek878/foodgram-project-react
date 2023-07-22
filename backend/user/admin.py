@@ -5,18 +5,18 @@ from .models import NewUser
 class NewUserAdmin(BaseUserAdmin):
     model = NewUser
     fieldsets = (
-        (None, {'fields': ('email', 'password', )}),
+        (('Данные для входа'), {'fields': ('email', 'password', )}),
         (('Персональная информация'), {'fields': ('first_name', 'last_name')}),
-        (('Разрешения'), {'fields': ('is_active', 'is_staff', 'is_superuser',
-                                      'groups', 'user_permissions')}),
+        (('Разрешения'), {'fields': ('is_active', 'is_staff', 'is_superuser')}),
     )
     add_fieldsets = (
-        (None, {
-          'fields': ('email', 'user_name', 'first_name', 'password', 'is_active', 'is_staff'),
+        (('Данные для регистрации пользователя'), {
+            'classes': ('wide',),
+            'fields': ('first_name', 'last_name', 'username', 'email', 'password1', 'password2'),
         }),
     )
-    list_display = ['email', 'first_name', 'last_name', 'username']
+    list_display = ['id', 'email', 'first_name', 'last_name', 'username']
     search_fields = ('email', 'first_name', 'last_name')
-    ordering = ('username', )
+    ordering = ('id', )
 
 admin.site.register(NewUser, NewUserAdmin)
