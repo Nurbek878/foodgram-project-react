@@ -1,8 +1,8 @@
 from djoser.views import UserViewSet
 from rest_framework import viewsets,pagination, permissions, mixins
-from api.serializers import NewUserSerializer, TagSerializer, IngredientSetSerializer
+from api.serializers import NewUserSerializer, TagSerializer, IngredientSetSerializer, RecipeSerializer
 from user.models import NewUser
-from recipe.models import Tag, Ingredient
+from recipe.models import Tag, Ingredient, Recipe
 
 class NewUserViewset(UserViewSet):
     queryset = NewUser.objects.all()
@@ -25,3 +25,8 @@ class IngredientViewSet(IngridientTagListRetrieveViewSet):
     serializer_class = IngredientSetSerializer
     queryset = Ingredient.objects.all()
 
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly,]
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer

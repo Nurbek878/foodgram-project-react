@@ -18,5 +18,6 @@ class NewUserAdmin(BaseUserAdmin):
     list_display = ['id', 'email', 'first_name', 'last_name', 'username']
     search_fields = ('email', 'first_name', 'last_name')
     ordering = ('id', )
+    list_filter = ('username', 'email',)
 
 admin.site.register(NewUser, NewUserAdmin)
