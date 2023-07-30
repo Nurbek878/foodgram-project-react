@@ -19,13 +19,21 @@ class TagSerializer(serializers.ModelSerializer):
 class IngredientSetSerializer(serializers.ModelSerializer):
 
     class Meta:
-        fields = ('id', 'name','measurement_unit')
+        fields = ('measurement_unit')
         model = Ingredient
+
+
+class IngredientRecipeSerializer(serializers.ModelSerializer):
+    ingredient = IngredientSetSerializer()
+
+    class Meta:
+        fields = ('id', 'ingredient', 'amount',)
+        model = IngredientRecipe
 
 
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
-    ingredients = IngredientSetSerializer(many=True)
+    ingredients = serializers.SerializerMethodField()
     author = NewUserSerializer(read_only=True)
 
     class Meta:
@@ -34,6 +42,10 @@ class RecipeSerializer(serializers.ModelSerializer):
                   'image', 
                   'cooking_time', 'author')
         model = Recipe
+
+    def get_ingredients(self, obj):
+        queryset = IngredientRecipe.objects.filter(recipe=obj)
+        return IngredientRecipeSerializer(queryset, many=True).data
 
     def create(self, validated_data)-> Recipe:
         tags = validated_data.pop('tags')
@@ -51,3 +63,12 @@ class RecipeSerializer(serializers.ModelSerializer):
             IngredientRecipe.objects.create(
                 ingredient=current_ingredient, recipe=recipe)
         return recipe
+    
+    def update(self, instance, validated_data)-> Recipe:
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.image = validated_data.get('image', instance.image)
+        instance.cooking_time = validated_data.get('cooking_time', instance.cooking_time)
+        instance.save()
