@@ -14,7 +14,7 @@ class Tag(models.Model):
         verbose_name_plural = 'Tags'
 
     def __str__(self) -> str:
-        return self.name
+        return str(self.name)
 
 
 class Ingredient(models.Model):
@@ -27,7 +27,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ingredients'
     
     def __str__(self) -> str:
-        return self.name
+        return str(self.name)
     
 
 class Recipe(models.Model):
@@ -45,7 +45,7 @@ class Recipe(models.Model):
         verbose_name_plural = 'Recipes'
 
     def __str__(self) -> str:
-        return self.name
+        return str(self.name)
 
 
 class IngredientRecipe(models.Model):
@@ -59,7 +59,7 @@ class IngredientRecipe(models.Model):
         verbose_name_plural = 'Ingredient Recipes'
 
     def __str__(self) -> str:
-        return f'{self.recipe.name} - {self.ingredient.name} - {self.amount}'
+        return str(self.amount)
 
 
 class TagRecipe(models.Model):
@@ -72,4 +72,4 @@ class TagRecipe(models.Model):
         verbose_name_plural = 'Tag Recipes'
     
     def __str__(self) -> str:
-        return f'{self.tag.name} - {self.recipe.name}'
+        return str(self.tag)
