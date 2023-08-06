@@ -26,6 +26,7 @@ class IngredientSetSerializer(serializers.ModelSerializer):
 
 
 class IngredientRecipeSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField(source='ingredient.id')
     measurement_unit = serializers.ReadOnlyField(source='ingredient.measurement_unit')
     name = serializers.ReadOnlyField(source='ingredient.name')
 
@@ -67,7 +68,7 @@ class RecipeListRetrieveSerializer(serializers.ModelSerializer):
     def get_ingredients(self, obj):
         queryset = IngredientRecipe.objects.filter(recipe=obj)
         return IngredientRecipeSerializer(queryset, many=True).data
-
+    
 
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
@@ -101,6 +102,24 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                 amount=ingredient['amount'],
                 recipe=recipe,  
             )
-        print(ingredients_list)
-        print(Recipe.objects.filter(pk=recipe.pk).values_list("ingredient"))
         return recipe
+
+    def update(self, instance, validated_data) -> Recipe:
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get('cooking_time', instance.cooking_time)
+        instance.image = validated_data.get('image', instance.image)
+        ingredients_list= validated_data.pop('ingredients')
+        IngredientRecipe.objects.filter(recipe=instance).delete()
+        for edit_ingredient in ingredients_list:
+            IngredientRecipe.objects.create(
+                ingredient=edit_ingredient['id'],
+                recipe=instance,
+                amount=edit_ingredient['amount']
+            )
+        instance.save()
+        return instance
+
+    def to_representation(self, instance) -> dict:
+        context = {'request': self.context.get('request')}
+        return RecipeListRetrieveSerializer(instance, context=context).data
