@@ -2,7 +2,7 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 from user.models import NewUser
-from recipe.models import Tag, Ingredient, Recipe, TagRecipe, IngredientRecipe
+from recipe.models import Tag, Ingredient, Recipe, TagRecipe, IngredientRecipe, FavoriteRecipe
 
 class NewUserSerializer(serializers.ModelSerializer):
 
@@ -57,17 +57,25 @@ class RecipeListRetrieveSerializer(serializers.ModelSerializer):
     ingredients = serializers.SerializerMethodField()
     author = NewUserSerializer(read_only=True)
     image = Base64ImageField(required=False, allow_null=True)
+    is_favorited = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = ('id', 'name', 'text', 
                   'tags', 'ingredients', 
                   'image', 
-                  'cooking_time', 'author')
+                  'cooking_time', 'author', 'is_favorited')
         model = Recipe
 
-    def get_ingredients(self, obj):
-        queryset = IngredientRecipe.objects.filter(recipe=obj)
+    def get_ingredients(self, recipe) -> dict:
+        queryset = IngredientRecipe.objects.filter(recipe=recipe)
         return IngredientRecipeSerializer(queryset, many=True).data
+    
+    def get_is_favorited(self, recipe) -> bool:
+        request = self.context.get('request')
+        user = request.user
+        if user.is_anonymous:
+            return False
+        return FavoriteRecipe.objects.filter(user=request.user, recipe=recipe).exists()
     
 
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
@@ -102,6 +110,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                 amount=ingredient['amount'],
                 recipe=recipe,  
             )
+        recipe.is_favorited = False
         return recipe
 
     def update(self, instance, validated_data) -> Recipe:
@@ -122,9 +131,28 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                 recipe=instance,
                 amount=edit_ingredient['amount']
             )
+        instance.is_favorited = instance.is_favorited
         instance.save()
         return instance
 
     def to_representation(self, instance) -> dict:
         context = {'request': self.context.get('request')}
         return RecipeListRetrieveSerializer(instance, context=context).data
+
+
+class FavoriteRecipeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ('id', 'image', 'name', 'cooking_time')
+        model = Recipe
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FavoriteRecipe
+        fields = ['user', 'recipe']
+
+    def to_representation(self, instance):
+        context = {'request': self.context.get('request')}
+        return FavoriteRecipeSerializer(instance, context=context).data

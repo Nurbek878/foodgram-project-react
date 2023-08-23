@@ -73,3 +73,18 @@ class TagRecipe(models.Model):
     
     def __str__(self) -> str:
         return str(self.tag)
+    
+
+class FavoriteRecipe(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, 
+                               related_name='favorite_recipe',
+                               null=True, blank=False)
+    user = models.ForeignKey(NewUser, on_delete=models.CASCADE, 
+                             related_name='favorite_user',
+                             null=True, blank=False)
+
+    class Meta:
+        ordering = ['recipe','user']
+        verbose_name = 'Favorite Recipe'
+        verbose_name_plural = 'Favorite Recipes'
+        models.UniqueConstraint(fields=['recipe','user'], name='unique_favorite_recipe')

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from recipe.models import IngredientRecipe, Tag, Ingredient, Recipe, TagRecipe
+from recipe.models import IngredientRecipe, Tag, Ingredient, Recipe, TagRecipe, FavoriteRecipe
 
 class TagAdmin(admin.ModelAdmin):
     model = Tag
@@ -24,13 +24,16 @@ class TagRecipeInLine(admin.TabularInline):
     model = TagRecipe
 
 
+class FavoriteRecipe(admin.TabularInline):
+    model = FavoriteRecipe
+
 class RecipeAdmin(admin.ModelAdmin):
     model = Recipe
     list_filter = ('name', 'author',)
     list_display = ('id', 'name', 'text', 'cooking_time', 'author')
     search_fields = ('name',)
     ordering = ('name',)
-    inlines = [IngredientRecipeInLine, TagRecipeInLine]
+    inlines = [IngredientRecipeInLine, TagRecipeInLine, FavoriteRecipe]
 
 admin.site.register(Tag, TagAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
