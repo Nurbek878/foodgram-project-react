@@ -73,9 +73,9 @@ class RecipeListRetrieveSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, recipe) -> bool:
         request = self.context.get('request')
         user = request.user
-        if user.is_anonymous:
-            return False
-        return FavoriteRecipe.objects.filter(user=request.user, recipe=recipe).exists()
+        if user.is_authenticated:
+            return FavoriteRecipe.objects.filter(user=request.user, recipe=recipe).exists()
+        return False
     
 
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
@@ -140,14 +140,14 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         return RecipeListRetrieveSerializer(instance, context=context).data
 
 
-class FavoriteRecipeSerializer(serializers.ModelSerializer):
+class FavoriteRecipeReturnSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('id', 'image', 'name', 'cooking_time')
         model = Recipe
 
 
-class FavoriteSerializer(serializers.ModelSerializer):
+class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FavoriteRecipe
@@ -155,4 +155,4 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         context = {'request': self.context.get('request')}
-        return FavoriteRecipeSerializer(instance, context=context).data
+        return FavoriteRecipeReturnSerializer(instance, context=context).data
