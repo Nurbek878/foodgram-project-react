@@ -88,3 +88,18 @@ class FavoriteRecipe(models.Model):
         verbose_name = 'Favorite Recipe'
         verbose_name_plural = 'Favorite Recipes'
         models.UniqueConstraint(fields=['recipe','user'], name='unique_favorite_recipe')
+
+
+class ShoppingRecipe(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE,
+                               related_name='shopping_recipe',
+                               null=True, blank=False)
+    user = models.ForeignKey(NewUser, on_delete=models.CASCADE, 
+                             related_name='shopping_user',
+                             null=True, blank=False)
+
+    class Meta:
+        ordering = ['recipe','user']
+        verbose_name = 'Shopping Recipe'
+        verbose_name_plural = 'Shopping Recipes'
+        models.UniqueConstraint(fields=['recipe','user'], name='unique_shopping_recipe')

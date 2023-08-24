@@ -2,7 +2,7 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 from user.models import NewUser
-from recipe.models import Tag, Ingredient, Recipe, TagRecipe, IngredientRecipe, FavoriteRecipe
+from recipe.models import Tag, Ingredient, Recipe, TagRecipe, IngredientRecipe, FavoriteRecipe, ShoppingRecipe
 
 class NewUserSerializer(serializers.ModelSerializer):
 
@@ -58,12 +58,13 @@ class RecipeListRetrieveSerializer(serializers.ModelSerializer):
     author = NewUserSerializer(read_only=True)
     image = Base64ImageField(required=False, allow_null=True)
     is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         fields = ('id', 'name', 'text', 
                   'tags', 'ingredients', 
                   'image', 
-                  'cooking_time', 'author', 'is_favorited')
+                  'cooking_time', 'author', 'is_favorited', 'is_in_shopping_cart')
         model = Recipe
 
     def get_ingredients(self, recipe) -> dict:
@@ -75,6 +76,13 @@ class RecipeListRetrieveSerializer(serializers.ModelSerializer):
         user = request.user
         if user.is_authenticated:
             return FavoriteRecipe.objects.filter(user=request.user, recipe=recipe).exists()
+        return False
+    
+    def get_is_in_shopping_cart(self, recipe) -> bool:
+        request = self.context.get('request')
+        user = request.user
+        if user.is_authenticated:
+            return ShoppingRecipe.objects.filter(user=request.user, recipe=recipe).exists()
         return False
     
 
@@ -111,6 +119,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                 recipe=recipe,  
             )
         recipe.is_favorited = False
+        recipe.is_in_shopping_cart = False
         return recipe
 
     def update(self, instance, validated_data) -> Recipe:
@@ -132,6 +141,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                 amount=edit_ingredient['amount']
             )
         instance.is_favorited = instance.is_favorited
+        instance.is_in_shopping_cart = instance.is_in_shopping_cart 
         instance.save()
         return instance
 
@@ -151,6 +161,17 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FavoriteRecipe
+        fields = ['user', 'recipe']
+
+    def to_representation(self, instance):
+        context = {'request': self.context.get('request')}
+        return FavoriteRecipeReturnSerializer(instance, context=context).data
+
+
+class ShoppingRecipeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ShoppingRecipe
         fields = ['user', 'recipe']
 
     def to_representation(self, instance):

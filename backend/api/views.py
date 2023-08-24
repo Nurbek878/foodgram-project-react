@@ -4,9 +4,10 @@ from djoser.views import UserViewSet
 from rest_framework import (filters as filt, viewsets, pagination, permissions, mixins, response, status, views)
 from api.serializers import (NewUserSerializer, TagSerializer,
                              IngredientSetSerializer, RecipeListRetrieveSerializer,
-                             RecipeCreateUpdateSerializer, FavoriteRecipeSerializer,)
+                             RecipeCreateUpdateSerializer, FavoriteRecipeSerializer,
+                             ShoppingRecipeSerializer)
 from user.models import NewUser
-from recipe.models import Tag, Ingredient, Recipe, FavoriteRecipe
+from recipe.models import Tag, Ingredient, Recipe, FavoriteRecipe, ShoppingRecipe
 
 class NewUserViewset(UserViewSet):
     queryset = NewUser.objects.all()
@@ -44,7 +45,7 @@ class CustomRecipeFilter(FilterSet):
         
     class Meta:
         model = Recipe
-        fields = ('tags', 'is_favorited', 'tags')
+        fields = ('tags', 'is_favorited', 'tags', 'author')
 
     def filter_is_favorited(self, queryset, name, value):
         user = self.request.user
@@ -94,4 +95,36 @@ class FavoriteRecipeView(views.APIView):
             return response.Response(f'Рецепт {recipe.name} удален из избранного',
                                      status=status.HTTP_204_NO_CONTENT)
         return response.Response(f'Рецепта {recipe.name} не было в избранном', 
+                                 status=status.HTTP_400_BAD_REQUEST)
+
+
+class ShoppingRecipeView(views.APIView):
+
+    pagination_class = None
+    permission_classes = [permissions.IsAuthenticated, ]
+    
+    def post(self, request, pk):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=pk)
+        if ShoppingRecipe.objects.filter(user=user, recipe=recipe).exists():
+            return response.Response(
+                f'Вы уже добавили рецепт {recipe.name} в список покупок',
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        ShoppingRecipe.objects.create(user=user, recipe=recipe)
+        serializer = ShoppingRecipeSerializer(recipe)
+        return response.Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
+
+    def delete(self, request, pk):
+        user=request.user
+        recipe = get_object_or_404(Recipe, id=pk)
+        shopping = ShoppingRecipe.objects.filter(user=user, recipe=recipe)
+        if shopping.exists():
+            shopping.delete()
+            return response.Response(f'Рецепт {recipe.name} удален из списка покупок',
+                                     status=status.HTTP_204_NO_CONTENT)
+        return response.Response(f'Рецепта {recipe.name} не было в списке покупок', 
                                  status=status.HTTP_400_BAD_REQUEST)

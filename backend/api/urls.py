@@ -1,7 +1,8 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import NewUserViewset, TagViewSet, IngredientViewSet, RecipeViewSet, FavoriteRecipeView
+from .views import (NewUserViewset, TagViewSet, IngredientViewSet, 
+                    RecipeViewSet, FavoriteRecipeView, ShoppingRecipeView)
 
 app_name = 'api'
 
@@ -14,6 +15,8 @@ router.register('recipes', RecipeViewSet)
 urlpatterns = [
     path('recipes/<int:pk>/favorite/',
          FavoriteRecipeView.as_view()),
+    path('recipes/<int:pk>/shopping_cart/',
+         ShoppingRecipeView.as_view()),
     path('', include(router.urls))
 
 ]
