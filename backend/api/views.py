@@ -1,13 +1,15 @@
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import (filters as filt, viewsets, pagination, permissions, mixins, response, status, views)
+from rest_framework.decorators import api_view
 from api.serializers import (NewUserSerializer, TagSerializer,
                              IngredientSetSerializer, RecipeListRetrieveSerializer,
                              RecipeCreateUpdateSerializer, FavoriteRecipeSerializer,
                              ShoppingRecipeSerializer)
 from user.models import NewUser
-from recipe.models import Tag, Ingredient, Recipe, FavoriteRecipe, ShoppingRecipe
+from recipe.models import Tag, Ingredient, Recipe, FavoriteRecipe, ShoppingRecipe, IngredientRecipe
 
 class NewUserViewset(UserViewSet):
     queryset = NewUser.objects.all()
@@ -42,7 +44,7 @@ class CustomRecipeFilter(FilterSet):
     tags = filters.ModelMultipleChoiceFilter(field_name='tags__slug',
                                              to_field_name='slug',
                                              queryset=Tag.objects.all())
-        
+
     class Meta:
         model = Recipe
         fields = ('tags', 'is_favorited', 'tags', 'author')
@@ -52,7 +54,7 @@ class CustomRecipeFilter(FilterSet):
         if user.is_authenticated:
             return queryset.filter(favorite_recipe__user=user)
         return queryset
-        
+
 
 class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,]
@@ -64,13 +66,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if self.action in ('list','retrieve'):
             return RecipeListRetrieveSerializer
         return RecipeCreateUpdateSerializer
-    
+
 
 class FavoriteRecipeView(views.APIView):
-
     pagination_class = None
     permission_classes = [permissions.IsAuthenticated, ]
-    
+
     def post(self, request, pk):
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
@@ -94,15 +95,14 @@ class FavoriteRecipeView(views.APIView):
             favorite.delete()
             return response.Response(f'Рецепт {recipe.name} удален из избранного',
                                      status=status.HTTP_204_NO_CONTENT)
-        return response.Response(f'Рецепта {recipe.name} не было в избранном', 
+        return response.Response(f'Рецепта {recipe.name} не было в избранном',
                                  status=status.HTTP_400_BAD_REQUEST)
 
 
 class ShoppingRecipeView(views.APIView):
-
     pagination_class = None
     permission_classes = [permissions.IsAuthenticated, ]
-    
+
     def post(self, request, pk):
         user = request.user
         recipe = get_object_or_404(Recipe, id=pk)
@@ -126,5 +126,33 @@ class ShoppingRecipeView(views.APIView):
             shopping.delete()
             return response.Response(f'Рецепт {recipe.name} удален из списка покупок',
                                      status=status.HTTP_204_NO_CONTENT)
-        return response.Response(f'Рецепта {recipe.name} не было в списке покупок', 
+        return response.Response(f'Рецепта {recipe.name} не было в списке покупок',
                                  status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def download_list(request):
+    ingredient_string = 'Список ингридиентов для рецептов'
+    ingredient_dict = {}
+    user = request.user
+    ingredients = IngredientRecipe.objects.filter(
+        recipe__shopping_recipe__user=user
+    )
+    for i, ingredient in enumerate(ingredients):
+        name = ingredients[i].ingredient.name
+        measurement_unit = ingredients[i].ingredient.measurement_unit
+        amount = ingredients[i].amount
+        if name in ingredient_dict:
+            ingredient_dict[name]['amount'] += amount
+        else:
+            ingredient_dict[name] = {'amount':amount,
+                                     'measurement_unit': measurement_unit}           
+    for name, value in ingredient_dict.items():
+        ingredient_string += (
+                    f'\n{name} - '
+                    f'{value["amount"]} {value["measurement_unit"]}'
+                    )
+    filename = 'Ingredient_list.pdf'
+    response = HttpResponse(ingredient_string, 'Content-Type: application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+    return response
