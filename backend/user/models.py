@@ -29,9 +29,12 @@ class NewUserManager(BaseUserManager):
 
 
 class NewUser(AbstractUser):
-    first_name = models.CharField('Имя', max_length=150, blank=True, null=True)
-    last_name = models.CharField('Фамилия', max_length=150, blank=True, null=True)
-    username = models.CharField('Уникальный юзернейм', unique=True, max_length=150)
+    first_name = models.CharField('Имя', max_length=150,
+                                  blank=True, null=True)
+    last_name = models.CharField('Фамилия', max_length=150,
+                                 blank=True, null=True)
+    username = models.CharField('Уникальный юзернейм',
+                                unique=True, max_length=150)
     email = models.EmailField('Почта', unique=True, max_length=254)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'password', 'first_name', 'last_name']
@@ -45,3 +48,17 @@ class NewUser(AbstractUser):
         return f'{self.username} ({self.pk})'
 
 
+class Subscription(models.Model):
+    subscriber = models.ForeignKey(NewUser, on_delete=models.CASCADE,
+                                   related_name='subscription_set')
+    subscribe = models.ForeignKey(NewUser, on_delete=models.CASCADE,
+                                  related_name='subscribed_by')
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        models.UniqueConstraint(fields=['subscriber', 'subscribe'],
+                                name='unique_subscriber_subscribe')
+
+    def __str__(self):
+        return f'{self.subscriber} подписан на {self.subscribe}'
