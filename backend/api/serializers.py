@@ -169,7 +169,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         return RecipeListRetrieveSerializer(instance, context=context).data
 
 
-class FavoriteRecipeReturnSerializer(serializers.ModelSerializer):
+class RecipeReturnSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('id', 'image', 'name', 'cooking_time')
@@ -184,7 +184,7 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         context = {'request': self.context.get('request')}
-        return FavoriteRecipeReturnSerializer(instance, context=context).data
+        return RecipeReturnSerializer(instance, context=context).data
 
 
 class ShoppingRecipeSerializer(serializers.ModelSerializer):
@@ -195,14 +195,7 @@ class ShoppingRecipeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         context = {'request': self.context.get('request')}
-        return FavoriteRecipeReturnSerializer(instance, context=context).data
-
-
-class UserRecipeReturnSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        fields = ('id', 'image', 'name', 'cooking_time')
-        model = Recipe
+        return RecipeReturnSerializer(instance, context=context).data
 
 
 class SubscribeReturnSerializer(serializers.ModelSerializer):
@@ -230,7 +223,7 @@ class SubscribeReturnSerializer(serializers.ModelSerializer):
         recipes = obj.recipes.all()
         if recipes_limit:
             recipes = recipes[:int(recipes_limit)]
-        return UserRecipeReturnSerializer(
+        return RecipeReturnSerializer(
             recipes, many=True,
             context={'request': self.context.get('request')}
         ).data
