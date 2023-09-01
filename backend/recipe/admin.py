@@ -37,12 +37,16 @@ class ShoppingRecipe(admin.TabularInline):
 
 class RecipeAdmin(admin.ModelAdmin):
     model = Recipe
-    list_filter = ('name', 'author',)
-    list_display = ('id', 'name', 'text', 'cooking_time', 'author')
+    list_filter = ('name', 'author', 'tags')
+    list_display = ('id', 'name', 'text', 'cooking_time', 'author',
+                    'is_favorited')
     search_fields = ('name',)
     ordering = ('name',)
     inlines = [IngredientRecipeInLine, TagRecipeInLine,
                FavoriteRecipe, ShoppingRecipe]
+
+    def is_favorited(self, obj):
+        return obj.favorite_recipe.count()
 
 
 admin.site.register(Tag, TagAdmin)
