@@ -22,7 +22,7 @@ from recipe.models import (Tag, Ingredient, Recipe, FavoriteRecipe,
 class NewUserViewset(UserViewSet):
     queryset = NewUser.objects.all()
     pagination_class = pagination.PageNumberPagination
-    serializer_class = NewUserSerializer    
+    serializer_class = NewUserSerializer
     permission_classes = [permissions.IsAuthenticated, ]
 
 
