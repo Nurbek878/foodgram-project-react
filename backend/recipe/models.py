@@ -37,7 +37,8 @@ class Recipe(models.Model):
     name = models.CharField(max_length=200, null=True, blank=False)
     text = models.TextField(null=True, blank=False)
     cooking_time = models.PositiveIntegerField(null=True, blank=False)
-    author = models.ForeignKey(NewUser, on_delete=models.CASCADE, related_name='recipes',
+    author = models.ForeignKey(NewUser, on_delete=models.CASCADE,
+                               related_name='recipes',
                                null=True, blank=False)
 
     class Meta:
