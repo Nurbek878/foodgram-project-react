@@ -8,7 +8,7 @@ from recipe.models import (Tag, Ingredient, Recipe, TagRecipe,
 
 
 class NewUserSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         fields = ('id', 'email', 'username',
@@ -18,11 +18,11 @@ class NewUserSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
+        user = request.user
         return (
-            request.user.is_authenticated
-            and Subscription.objects.filter(
-                subscriber=request.user,
-                subscribe=obj,
+            user.is_authenticated and
+            user.subscription_set.filter(
+                subscribe=obj
             ).exists()
         )
 
