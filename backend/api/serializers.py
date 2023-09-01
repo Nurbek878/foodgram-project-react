@@ -130,10 +130,22 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         recipe.save()
         for tag in tags_list:
             TagRecipe.objects.create(tag=tag, recipe=recipe)
+        ingredients_list_validate = []
         for ingredient in ingredients_list:
+            amount = ingredient['amount']
+            if amount <= 0:
+                raise serializers.ValidationError(
+                    'Количество ингредиентов должно быть натуральным числом',
+                )
+            ingredients_list_validate.append(ingredient.get('id'))
+            if len(set(ingredients_list_validate)
+                   ) != len(ingredients_list_validate):
+                raise serializers.ValidationError(
+                 'Нельзя дублировать ингредиенты в рецепте',
+                 )
             IngredientRecipe.objects.create(
                 ingredient=ingredient['id'],
-                amount=ingredient['amount'],
+                amount=amount,
                 recipe=recipe,
             )
         recipe.is_favorited = False
@@ -153,7 +165,19 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         for tag in tags_list:
             TagRecipe.objects.create(
                 tag=tag, recipe=instance)
+        ingredients_list_validate = []
         for edit_ingredient in ingredients_list:
+            amount = edit_ingredient['amount']
+            if amount <= 0:
+                raise serializers.ValidationError(
+                    'Количество ингредиентов должно быть натуральным числом',
+                )
+            ingredients_list_validate.append(edit_ingredient.get('id'))
+            if len(set(ingredients_list_validate)
+                   ) != len(ingredients_list_validate):
+                raise serializers.ValidationError(
+                 'Нельзя дублировать ингредиенты в рецепте',
+                 )
             IngredientRecipe.objects.create(
                 ingredient=edit_ingredient['id'],
                 recipe=instance,

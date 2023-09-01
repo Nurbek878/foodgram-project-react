@@ -45,7 +45,7 @@ class RecipeAdmin(admin.ModelAdmin):
     inlines = [IngredientRecipeInLine, TagRecipeInLine,
                FavoriteRecipe, ShoppingRecipe]
 
-    def is_favorited(self, obj):
+    def is_favorited(self, obj) -> int:
         return obj.favorite_recipe.count()
 
 

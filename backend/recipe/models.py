@@ -42,7 +42,7 @@ class Recipe(models.Model):
                                null=True, blank=False)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['-id']
         verbose_name = 'Recipe'
         verbose_name_plural = 'Recipes'
 
