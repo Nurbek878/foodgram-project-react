@@ -21,8 +21,8 @@ class NewUserSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         user = request.user
         return (
-            user.is_authenticated and
-            user.subscription_set.filter(
+            user.is_authenticated
+            and user.subscription_set.filter(
                 subscribe=obj
             ).exists()
         )
@@ -142,8 +142,8 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             if len(set(ingredients_list_validate)
                    ) != len(ingredients_list_validate):
                 raise serializers.ValidationError(
-                 'Нельзя дублировать ингредиенты в рецепте',
-                 )
+                    'Нельзя дублировать ингредиенты в рецепте',
+                )
             IngredientRecipe.objects.create(
                 ingredient=ingredient['id'],
                 amount=amount,
@@ -177,8 +177,8 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             if len(set(ingredients_list_validate)
                    ) != len(ingredients_list_validate):
                 raise serializers.ValidationError(
-                 'Нельзя дублировать ингредиенты в рецепте',
-                 )
+                    'Нельзя дублировать ингредиенты в рецепте',
+                )
             IngredientRecipe.objects.create(
                 ingredient=edit_ingredient['id'],
                 recipe=instance,

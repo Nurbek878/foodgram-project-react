@@ -230,9 +230,9 @@ def download_list(request):
                                      'measurement_unit': measurement_unit}
     for name, value in ingredient_dict.items():
         ingredient_string += (
-                    f'\n{name} - '
-                    f'{value["amount"]} {value["measurement_unit"]}'
-                    )
+            f'\n{name} - '
+            f'{value["amount"]} {value["measurement_unit"]}'
+        )
     filename = 'Ingredient_list.pdf'
     response = HttpResponse(ingredient_string, 'Content-Type: application/pdf')
     response['Content-Disposition'] = 'attachment; filename="{}"'.format(
