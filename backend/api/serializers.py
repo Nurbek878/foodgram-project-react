@@ -238,8 +238,8 @@ class SubscribeReturnSerializer(serializers.ModelSerializer):
         subscribers = user.subscribed_by.all()
         if user.is_anonymous or subscribers.count() == 0:
             return False
-        return Subscription.objects.filter(
-            subscriber=user, subscribe=user).exists()
+        return NewUser.objects.filter(
+            subscribed_to=user).exists()
 
     def get_recipes(self, obj):
         request = self.context.get('request')

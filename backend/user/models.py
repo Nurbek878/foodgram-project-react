@@ -36,6 +36,12 @@ class NewUser(AbstractUser):
     username = models.CharField('Уникальный юзернейм',
                                 unique=True, max_length=150)
     email = models.EmailField('Почта', unique=True, max_length=254)
+    subscribed_to = models.ManyToManyField(
+        'self',
+        symmetrical=False,
+        through_fields=('subscriber', 'subscribe'),
+        through='Subscription',
+    )
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'password', 'first_name', 'last_name']
     objects = NewUserManager()

@@ -22,7 +22,7 @@ from recipe.models import (Tag, Ingredient, Recipe, FavoriteRecipe,
 class NewUserViewset(UserViewSet):
     queryset = NewUser.objects.all()
     serializer_class = NewUserSerializer
-    permission_classes = [permissions.IsAuthenticated, ]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, ]
 
 
 class IngridientTagListRetrieveViewSet(mixins.ListModelMixin,
