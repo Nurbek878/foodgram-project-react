@@ -33,7 +33,9 @@ sudo docker compose exec backend python manage.py createsuperuser
 sudo docker compose exec backend python manage.py loaddata ingredients.json
 ```
 После запуска проект будут доступен по адресу: [http://localhost/](http://localhost/)
+
 Документация будет доступна по адресу: [http://localhost/api/docs/](http://localhost/api/docs/)
+
 Админка будет доступна по адресу: [http://localhost/admin/](http://localhost/admin/)
 
 
