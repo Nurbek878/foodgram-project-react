@@ -1,10 +1,11 @@
 import base64
+
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+
+from recipe.models import (FavoriteRecipe, Ingredient, IngredientRecipe,
+                           Recipe, ShoppingRecipe, Tag, TagRecipe)
 from user.models import NewUser, Subscription
-from recipe.models import (Tag, Ingredient, Recipe, TagRecipe,
-                           IngredientRecipe, FavoriteRecipe,
-                           ShoppingRecipe)
 
 
 class NewUserSerializer(serializers.ModelSerializer):

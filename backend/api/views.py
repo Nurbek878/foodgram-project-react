@@ -1,22 +1,22 @@
 from django.http import HttpResponse
-from django_filters.rest_framework import (DjangoFilterBackend,
-                                           FilterSet, filters)
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import (DjangoFilterBackend, FilterSet,
+                                           filters)
 from djoser.views import UserViewSet
-from rest_framework import (filters as filt, viewsets,
-                            permissions, mixins, response,
-                            status, views, generics)
+from rest_framework import filters as filt
+from rest_framework import (generics, mixins, permissions, response, status,
+                            views, viewsets)
 from rest_framework.decorators import api_view
-from api.serializers import (NewUserSerializer, TagSerializer,
-                             IngredientSetSerializer,
+
+from api.serializers import (FavoriteRecipeSerializer, IngredientSetSerializer,
+                             NewUserSerializer, RecipeCreateUpdateSerializer,
                              RecipeListRetrieveSerializer,
-                             RecipeCreateUpdateSerializer,
-                             FavoriteRecipeSerializer,
-                             ShoppingRecipeSerializer, SubscribeUserSerializer,
-                             SubscribeReturnSerializer)
+                             ShoppingRecipeSerializer,
+                             SubscribeReturnSerializer,
+                             SubscribeUserSerializer, TagSerializer)
+from recipe.models import (FavoriteRecipe, Ingredient, IngredientRecipe,
+                           Recipe, ShoppingRecipe, Tag)
 from user.models import NewUser, Subscription
-from recipe.models import (Tag, Ingredient, Recipe, FavoriteRecipe,
-                           ShoppingRecipe, IngredientRecipe)
 
 
 class NewUserViewset(UserViewSet):
