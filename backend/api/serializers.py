@@ -110,14 +110,8 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                   'cooking_time', 'author')
         model = Recipe
 
-    def create(self, validated_data) -> Recipe:
-        ingredients_list = validated_data.pop('ingredients')
-        tags_list = validated_data.pop('tags')
-        author = self.context.get('request').user
-        recipe = Recipe.objects.create(
-            author=author, **validated_data)
-        for tag in tags_list:
-            TagRecipe.objects.create(tag=tag, recipe=recipe)
+    def validate(self, data):
+        ingredients_list = data['ingredients']
         ingredients_list_validate = []
         for ingredient in ingredients_list:
             amount = ingredient['amount']
@@ -131,13 +125,23 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Нельзя дублировать ингредиенты в рецепте',
                 )
+        return data
+
+    def create(self, validated_data) -> Recipe:
+        ingredients_list = validated_data.pop('ingredients')
+        tags_list = validated_data.pop('tags')
+        author = self.context.get('request').user
+        recipe = Recipe.objects.create(
+            author=author, **validated_data)
+        for tag in tags_list:
+            TagRecipe.objects.create(tag=tag, recipe=recipe)
+        for ingredient in ingredients_list:
+            amount = ingredient['amount']
             IngredientRecipe.objects.create(
                 ingredient=ingredient['id'],
                 amount=amount,
                 recipe=recipe,
             )
-        recipe.is_favorited = False
-        recipe.is_in_shopping_cart = False
         return recipe
 
     def update(self, instance, validated_data) -> Recipe:
@@ -153,26 +157,12 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         for tag in tags_list:
             TagRecipe.objects.create(
                 tag=tag, recipe=instance)
-        ingredients_list_validate = []
         for edit_ingredient in ingredients_list:
-            amount = edit_ingredient['amount']
-            if amount <= 0:
-                raise serializers.ValidationError(
-                    'Количество ингредиентов должно быть натуральным числом',
-                )
-            ingredients_list_validate.append(edit_ingredient.get('id'))
-            if len(set(ingredients_list_validate)
-                   ) != len(ingredients_list_validate):
-                raise serializers.ValidationError(
-                    'Нельзя дублировать ингредиенты в рецепте',
-                )
             IngredientRecipe.objects.create(
                 ingredient=edit_ingredient['id'],
                 recipe=instance,
                 amount=edit_ingredient['amount']
             )
-        instance.is_favorited = instance.is_favorited
-        instance.is_in_shopping_cart = instance.is_in_shopping_cart
         instance.save()
         return instance
 

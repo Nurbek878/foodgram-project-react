@@ -1,13 +1,13 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import (DjangoFilterBackend, FilterSet,
-                                           filters)
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import filters as filt
 from rest_framework import (generics, mixins, permissions, response, status,
                             views, viewsets)
 from rest_framework.decorators import api_view
 
+from api.filters import CustomRecipeFilter
 from api.serializers import (FavoriteRecipeSerializer, IngredientSetSerializer,
                              NewUserSerializer, RecipeCreateUpdateSerializer,
                              RecipeListRetrieveSerializer,
@@ -46,32 +46,6 @@ class IngredientViewSet(IngridientTagListRetrieveViewSet):
     queryset = Ingredient.objects.all()
     filter_backends = (CustomIngredientFilter,)
     search_fields = ('^name',)
-
-
-class CustomRecipeFilter(FilterSet):
-    is_favorited = filters.BooleanFilter(method='filter_is_favorited')
-    is_in_shopping_cart = filters.BooleanFilter(
-        method='filter_is_in_shopping_cart')
-    tags = filters.ModelMultipleChoiceFilter(field_name='tags__slug',
-                                             to_field_name='slug',
-                                             queryset=Tag.objects.all())
-
-    class Meta:
-        model = Recipe
-        fields = ('tags', 'is_favorited', 'tags',
-                  'author', 'is_in_shopping_cart')
-
-    def filter_is_favorited(self, queryset, name, value):
-        user = self.request.user
-        if user.is_authenticated:
-            return queryset.filter(favorite_recipe__user=user)
-        return queryset
-
-    def filter_is_in_shopping_cart(self, queryset, name, value):
-        user = self.request.user
-        if user.is_authenticated:
-            return queryset.filter(shopping_recipe__user=user)
-        return queryset
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -173,7 +147,6 @@ class SubscribeUserView(views.APIView):
             )
         subscription = Subscription.objects.create(subscriber=subscriber,
                                                    subscribe=subscribe)
-        subscription.save()
         serializer = SubscribeUserSerializer(
             subscription, context={'request': request}
         )
