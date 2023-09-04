@@ -1,8 +1,6 @@
-import base64
-
-from django.core.files.base import ContentFile
 from rest_framework import serializers
 
+from api.fields import Base64ImageField
 from recipe.models import (FavoriteRecipe, Ingredient, IngredientRecipe,
                            Recipe, ShoppingRecipe, Tag, TagRecipe)
 from user.models import NewUser, Subscription
@@ -61,15 +59,6 @@ class IngredientRecipeCreateUpdateSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount')
 
 
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-        return super().to_internal_value(data)
-
-
 class RecipeListRetrieveSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     ingredients = serializers.SerializerMethodField()
@@ -77,6 +66,9 @@ class RecipeListRetrieveSerializer(serializers.ModelSerializer):
     image = Base64ImageField(required=False, allow_null=True)
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
+    ingredients = IngredientRecipeSerializer(source='ingredientrecipe_set',
+                                             many=True,
+                                             read_only=True)
 
     class Meta:
         fields = ('id', 'name', 'text',
@@ -85,10 +77,6 @@ class RecipeListRetrieveSerializer(serializers.ModelSerializer):
                   'cooking_time', 'author',
                   'is_favorited', 'is_in_shopping_cart')
         model = Recipe
-
-    def get_ingredients(self, recipe) -> dict:
-        queryset = IngredientRecipe.objects.filter(recipe=recipe)
-        return IngredientRecipeSerializer(queryset, many=True).data
 
     def get_is_favorited(self, recipe) -> bool:
         request = self.context.get('request')
@@ -128,7 +116,6 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         author = self.context.get('request').user
         recipe = Recipe.objects.create(
             author=author, **validated_data)
-        recipe.save()
         for tag in tags_list:
             TagRecipe.objects.create(tag=tag, recipe=recipe)
         ingredients_list_validate = []
