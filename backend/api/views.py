@@ -66,18 +66,14 @@ class FavoriteRecipeView(views.APIView):
 
     def post(self, request, pk):
         user = request.user
-        recipe = get_object_or_404(Recipe, id=pk)
-        if FavoriteRecipe.objects.filter(user=user, recipe=recipe).exists():
-            return response.Response(
-                f'Вы уже добавили рецепт {recipe.name} в избранное',
-                status=status.HTTP_400_BAD_REQUEST
+        serializer = FavoriteRecipeSerializer(
+                data={'user': user.id, 'recipe': pk},
+                context={'request': self.request}
             )
-        FavoriteRecipe.objects.create(user=user, recipe=recipe)
-        serializer = FavoriteRecipeSerializer(recipe)
-        return response.Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED
-        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return response.Response(serializer.data,
+                                 status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk):
         user = request.user
@@ -99,18 +95,14 @@ class ShoppingRecipeView(views.APIView):
 
     def post(self, request, pk):
         user = request.user
-        recipe = get_object_or_404(Recipe, id=pk)
-        if ShoppingRecipe.objects.filter(user=user, recipe=recipe).exists():
-            return response.Response(
-                f'Вы уже добавили рецепт {recipe.name} в список покупок',
-                status=status.HTTP_400_BAD_REQUEST
+        serializer = ShoppingRecipeSerializer(
+                data={'user': user.id, 'recipe': pk},
+                context={'request': self.request}
             )
-        ShoppingRecipe.objects.create(user=user, recipe=recipe)
-        serializer = ShoppingRecipeSerializer(recipe)
-        return response.Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED
-        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return response.Response(serializer.data,
+                                 status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk):
         user = request.user

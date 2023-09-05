@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
 
 from api.fields import Base64ImageField
 from recipe.models import (FavoriteRecipe, Ingredient, IngredientRecipe,
@@ -184,9 +184,19 @@ class FavoriteRecipeSerializer(serializers.ModelSerializer):
         model = FavoriteRecipe
         fields = ['user', 'recipe']
 
+    def validate(self, data):
+        user = data.get('user')
+        recipe = data.get('recipe')
+        if FavoriteRecipe.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError(
+                {'error': f'Вы уже добавили рецепт {recipe.name} в избранное'},
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        return data
+
     def to_representation(self, instance):
         context = {'request': self.context.get('request')}
-        return RecipeReturnSerializer(instance, context=context).data
+        return RecipeReturnSerializer(instance.recipe, context=context).data
 
 
 class ShoppingRecipeSerializer(serializers.ModelSerializer):
@@ -195,9 +205,19 @@ class ShoppingRecipeSerializer(serializers.ModelSerializer):
         model = ShoppingRecipe
         fields = ['user', 'recipe']
 
+    def validate(self, data):
+        user = data.get('user')
+        recipe = data.get('recipe')
+        if ShoppingRecipe.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError(
+                {'error': f'Вы уже добавили рецепт {recipe.name} в список'},
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        return data
+
     def to_representation(self, instance):
         context = {'request': self.context.get('request')}
-        return RecipeReturnSerializer(instance, context=context).data
+        return RecipeReturnSerializer(instance.recipe, context=context).data
 
 
 class SubscribeReturnSerializer(serializers.ModelSerializer):
