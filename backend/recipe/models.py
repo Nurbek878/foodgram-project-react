@@ -76,6 +76,9 @@ class IngredientRecipe(models.Model):
         ordering = ['ingredient', 'recipe']
         verbose_name = 'Ingredient Recipe'
         verbose_name_plural = 'Ingredient Recipes'
+        constraints = [
+            models.UniqueConstraint(fields=['ingredient', 'recipe'],
+                                    name='unique_ingredient_recipe')]
 
     def __str__(self) -> str:
         return str(self.amount)
@@ -93,6 +96,9 @@ class TagRecipe(models.Model):
         ordering = ['tag', 'recipe']
         verbose_name = 'Tag Recipe'
         verbose_name_plural = 'Tag Recipes'
+        constraints = [
+            models.UniqueConstraint(fields=['tag', 'recipe'],
+                                    name='unique_tag_recipe')]
 
     def __str__(self) -> str:
         return str(self.tag)
@@ -112,8 +118,8 @@ class FavoriteRecipe(models.Model):
         ordering = ['recipe', 'user']
         verbose_name = 'Favorite Recipe'
         verbose_name_plural = 'Favorite Recipes'
-        models.UniqueConstraint(fields=['recipe', 'user'],
-                                name='unique_favorite_recipe')
+        constraints = [models.UniqueConstraint(fields=['recipe', 'user'],
+                       name='unique_favorite_recipe')]
 
 
 class ShoppingRecipe(models.Model):
@@ -130,5 +136,6 @@ class ShoppingRecipe(models.Model):
         ordering = ['recipe', 'user']
         verbose_name = 'Shopping Recipe'
         verbose_name_plural = 'Shopping Recipes'
-        models.UniqueConstraint(fields=['recipe', 'user'],
-                                name='unique_shopping_recipe')
+        constraints = [
+            models.UniqueConstraint(fields=['recipe', 'user'],
+                                    name='unique_shopping_recipe')]
