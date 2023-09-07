@@ -9,8 +9,9 @@ load_dotenv(os.path.join(BASE_DIR.parent.parent, 'infra/.env'), verbose=True)
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', default=True)
 
+# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='*').split(',')
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend']
 
 INSTALLED_APPS = [

@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -178,28 +179,31 @@ class SubscriptionUserView(generics.ListAPIView):
 
 @api_view(['GET'])
 def download_list(request):
-    ingredient_string = 'Список ингридиентов для рецептов'
-    ingredient_dict = {}
+    ingredient_note = 'Список ингридиентов для рецептов'
+    unique_names = {}
     user = request.user
-    ingredients = IngredientRecipe.objects.filter(
+    ingredients = IngredientRecipe.objects.values(
+        'ingredient__name', 'ingredient__measurement_unit',
+        ).annotate(amount_ingredients=Count('amount')).filter(
         recipe__shopping_recipe__user=user
-    )
+        )
     for i, ingredient in enumerate(ingredients):
-        name = ingredients[i].ingredient.name
-        measurement_unit = ingredients[i].ingredient.measurement_unit
-        amount = ingredients[i].amount
-        if name in ingredient_dict:
-            ingredient_dict[name]['amount'] += amount
+        name = ingredient["ingredient__name"]
+        measurement_unit = ingredient["ingredient__measurement_unit"]
+        amount = ingredient["amount_ingredients"]
+        if name in unique_names:
+            unique_names[name]['amount'] += amount
         else:
-            ingredient_dict[name] = {'amount': amount,
-                                     'measurement_unit': measurement_unit}
-    for name, value in ingredient_dict.items():
-        ingredient_string += (
+            unique_names[name] = {'amount': amount,
+                                  'measurement_unit': measurement_unit}
+
+    for name, value in unique_names.items():
+        ingredient_note += (
             f'\n{name} - '
             f'{value["amount"]} {value["measurement_unit"]}'
         )
     filename = 'Ingredient_list.pdf'
-    response = HttpResponse(ingredient_string, 'Content-Type: application/pdf')
+    response = HttpResponse(ingredient_note, 'Content-Type: application/pdf')
     response['Content-Disposition'] = 'attachment; filename="{}"'.format(
         filename)
     return response

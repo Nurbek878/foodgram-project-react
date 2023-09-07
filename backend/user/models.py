@@ -29,13 +29,16 @@ class NewUserManager(BaseUserManager):
 
 
 class NewUser(AbstractUser):
-    first_name = models.CharField('Имя', max_length=150,
+    first_name = models.CharField(max_length=150,
+                                  verbose_name='Имя',
                                   blank=True, null=True)
-    last_name = models.CharField('Фамилия', max_length=150,
+    last_name = models.CharField(max_length=150,
+                                 verbose_name='Фамилия',
                                  blank=True, null=True)
-    username = models.CharField('Уникальный юзернейм',
-                                unique=True, max_length=150)
-    email = models.EmailField('Почта', unique=True, max_length=254)
+    username = models.CharField(unique=True, max_length=150,
+                                verbose_name='Уникальный юзернейм')
+    email = models.EmailField(unique=True, max_length=254,
+                              verbose_name='Почта')
     subscribed_to = models.ManyToManyField(
         'self',
         symmetrical=False,
@@ -56,8 +59,10 @@ class NewUser(AbstractUser):
 
 class Subscription(models.Model):
     subscriber = models.ForeignKey(NewUser, on_delete=models.CASCADE,
+                                   verbose_name='Подписчик',
                                    related_name='subscription_set')
     subscribe = models.ForeignKey(NewUser, on_delete=models.CASCADE,
+                                  verbose_name='Подписка',
                                   related_name='subscribed_by')
 
     class Meta:
