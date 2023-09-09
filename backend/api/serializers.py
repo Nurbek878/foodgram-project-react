@@ -133,36 +133,40 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         author = self.context.get('request').user
         recipe = Recipe.objects.create(
             author=author, **validated_data)
+        tags = []
         for tag in tags_list:
-            TagRecipe.objects.create(tag=tag, recipe=recipe)
+            TagRecipe(tag=tag, recipe=recipe)
+        TagRecipe.objects.bulk_create(tags)
+        ingredients = []
         for ingredient in ingredients_list:
             amount = ingredient['amount']
-            IngredientRecipe.objects.create(
-                ingredient=ingredient['id'],
-                amount=amount,
-                recipe=recipe,
-            )
+            ingredients.append(
+                IngredientRecipe
+                (ingredient=ingredient['id'],
+                 amount=amount,
+                 recipe=recipe,))
+        IngredientRecipe.objects.bulk_create(ingredients)
         return recipe
 
     def update(self, instance, validated_data) -> Recipe:
-        instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text', instance.text)
-        instance.cooking_time = validated_data.get('cooking_time',
-                                                   instance.cooking_time)
-        instance.image = validated_data.get('image', instance.image)
         tags_list = validated_data.pop('tags')
         ingredients_list = validated_data.pop('ingredients')
+        instance = super().update(instance, validated_data)
         IngredientRecipe.objects.filter(recipe=instance).delete()
         TagRecipe.objects.filter(recipe=instance).delete()
+        tags = []
         for tag in tags_list:
-            TagRecipe.objects.create(
-                tag=tag, recipe=instance)
+            TagRecipe(tag=tag, recipe=instance)
+        TagRecipe.objects.bulk_create(tags)
+        ingredients = []
         for edit_ingredient in ingredients_list:
-            IngredientRecipe.objects.create(
-                ingredient=edit_ingredient['id'],
-                recipe=instance,
-                amount=edit_ingredient['amount']
-            )
+            amount = edit_ingredient['amount']
+            ingredients.append(
+                IngredientRecipe
+                (ingredient=edit_ingredient['id'],
+                 amount=amount,
+                 recipe=instance,))
+        IngredientRecipe.objects.bulk_create(ingredients)
         instance.save()
         return instance
 
@@ -220,8 +224,7 @@ class ShoppingRecipeSerializer(serializers.ModelSerializer):
         return RecipeReturnSerializer(instance.recipe, context=context).data
 
 
-class SubscribeReturnSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField()
+class SubscribeReturnSerializer(NewUserSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
@@ -231,13 +234,6 @@ class SubscribeReturnSerializer(serializers.ModelSerializer):
                   'first_name', 'last_name',
                   'is_subscribed', 'recipes',
                   'recipes_count')
-
-    def get_is_subscribed(self, user):
-        subscribers = user.subscribed_by.all()
-        if user.is_anonymous or subscribers.count() == 0:
-            return False
-        return NewUser.objects.filter(
-            subscribed_to=user).exists()
 
     def get_recipes(self, obj):
         request = self.context.get('request')
@@ -273,7 +269,7 @@ class SubscribeUserSerializer(serializers.ModelSerializer):
         if subscriber == subscribe:
             raise serializers.ValidationError(
                {'error':
-                f'Пользователь {subscriber} пытается пописаться на самого себя'}
+                f'Пользователь {subscriber} подписывается на самого себя'}
             )
         return data
 
