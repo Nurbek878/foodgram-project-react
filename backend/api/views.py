@@ -125,24 +125,13 @@ class SubscribeUserView(views.APIView):
 
     def post(self, request, pk):
         subscriber = request.user
-        subscribe = get_object_or_404(NewUser, id=pk)
-        if subscriber == subscribe:
-            return response.Response(
-                f' Пользователь {subscriber} пытается подписаться на себя',
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        subscribing = Subscription.objects.filter(subscriber=subscriber,
-                                                  subscribe=subscribe)
-        if subscribing.exists():
-            return response.Response(
-                f'Пользователь {subscriber} уже подписался на {subscribe}',
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        subscription = Subscription.objects.create(subscriber=subscriber,
-                                                   subscribe=subscribe)
         serializer = SubscribeUserSerializer(
-            subscription, context={'request': request}
+            data={'subscriber': subscriber.id, 'subscribe': pk},
+            context={'request': request}
         )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
         return response.Response(
             serializer.data,
             status=status.HTTP_201_CREATED

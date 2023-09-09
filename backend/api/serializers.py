@@ -1,4 +1,4 @@
-from rest_framework import serializers, status
+from rest_framework import serializers, status, validators
 
 from api.fields import Base64ImageField
 from recipe.models import (FavoriteRecipe, Ingredient, IngredientRecipe,
@@ -259,6 +259,23 @@ class SubscribeUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = ['subscriber', 'subscribe']
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=Subscription.objects.all(),
+                fields=('subscriber', 'subscribe'),
+                message='Такая подписка уже существует'
+            )
+        ]
+
+    def validate(self, data):
+        subscriber = data['subscriber']
+        subscribe = data['subscribe']
+        if subscriber == subscribe:
+            raise serializers.ValidationError(
+               {'error':
+                f'Пользователь {subscriber} пытается пописаться на самого себя'}
+            )
+        return data
 
     def to_representation(self, instance):
         request = self.context.get('request')
