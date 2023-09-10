@@ -167,12 +167,14 @@ def download_list(request):
     ingredient_note = 'Список ингридиентов для рецептов'
     unique_names = {}
     user = request.user
-    ingredients = IngredientRecipe.objects.values(
-        'ingredient__name', 'ingredient__measurement_unit',
-                                                 ).annotate(
-            amount_ingredients=Count('amount')).filter(
-            recipe__shopping_recipe__user=user
-                                                           )
+    ingredients = (
+        IngredientRecipe.objects.values(
+            "ingredient__name",
+            "ingredient__measurement_unit",
+        )
+        .annotate(amount_ingredients=Count("amount"))
+        .filter(recipe__shopping_recipe__user=user)
+    )
     for i, ingredient in enumerate(ingredients):
         name = ingredient["ingredient__name"]
         measurement_unit = ingredient["ingredient__measurement_unit"]
