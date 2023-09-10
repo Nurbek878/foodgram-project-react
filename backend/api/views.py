@@ -20,6 +20,33 @@ from recipe.models import (FavoriteRecipe, Ingredient, IngredientRecipe,
 from user.models import NewUser, Subscription
 
 
+def create_favorite_shopping(request, serializer, pk):
+    user = request.user
+    serializer = serializer(
+            data={'user': user.id, 'recipe': pk},
+            context={'request': request}
+        )
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return response.Response(serializer.data,
+                             status=status.HTTP_201_CREATED)
+
+
+def delete_favorite_shopping(request, model, pk,
+                             mes_text_del, mes_text_no):
+    user = request.user
+    recipe = get_object_or_404(Recipe, id=pk)
+    model_for_delete = model.objects.filter(user=user, recipe=recipe)
+    if model_for_delete.exists():
+        model_for_delete.delete()
+        return response.Response(
+            f'Рецепт {recipe.name} удален из {mes_text_del}',
+            status=status.HTTP_204_NO_CONTENT)
+    return response.Response(
+        f'Рецепта {recipe.name} не было в {mes_text_no}',
+        status=status.HTTP_400_BAD_REQUEST)
+
+
 class NewUserViewset(UserViewSet):
     queryset = NewUser.objects.all()
     serializer_class = NewUserSerializer
@@ -66,28 +93,13 @@ class FavoriteRecipeView(views.APIView):
     permission_classes = [permissions.IsAuthenticated, ]
 
     def post(self, request, pk):
-        user = request.user
-        serializer = FavoriteRecipeSerializer(
-                data={'user': user.id, 'recipe': pk},
-                context={'request': self.request}
-            )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return response.Response(serializer.data,
-                                 status=status.HTTP_201_CREATED)
+        return create_favorite_shopping(request, FavoriteRecipeSerializer, pk)
 
     def delete(self, request, pk):
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=pk)
-        favorite = FavoriteRecipe.objects.filter(user=user, recipe=recipe)
-        if favorite.exists():
-            favorite.delete()
-            return response.Response(
-                f'Рецепт {recipe.name} удален из избранного',
-                status=status.HTTP_204_NO_CONTENT)
-        return response.Response(
-            f'Рецепта {recipe.name} не было в избранном',
-            status=status.HTTP_400_BAD_REQUEST)
+        mes_text_del = 'избранного'
+        mes_text_no = 'избранном'
+        return delete_favorite_shopping(request, FavoriteRecipe, pk,
+                                        mes_text_del, mes_text_no)
 
 
 class ShoppingRecipeView(views.APIView):
@@ -95,28 +107,13 @@ class ShoppingRecipeView(views.APIView):
     permission_classes = [permissions.IsAuthenticated, ]
 
     def post(self, request, pk):
-        user = request.user
-        serializer = ShoppingRecipeSerializer(
-                data={'user': user.id, 'recipe': pk},
-                context={'request': self.request}
-            )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return response.Response(serializer.data,
-                                 status=status.HTTP_201_CREATED)
+        return create_favorite_shopping(request, ShoppingRecipeSerializer, pk)
 
     def delete(self, request, pk):
-        user = request.user
-        recipe = get_object_or_404(Recipe, id=pk)
-        shopping = ShoppingRecipe.objects.filter(user=user, recipe=recipe)
-        if shopping.exists():
-            shopping.delete()
-            return response.Response(
-                f'Рецепт {recipe.name} удален из списка покупок',
-                status=status.HTTP_204_NO_CONTENT)
-        return response.Response(
-            f'Рецепта {recipe.name} не было в списке покупок',
-            status=status.HTTP_400_BAD_REQUEST)
+        mes_text_del = 'списка покупок'
+        mes_text_no = 'списке покупок'
+        return delete_favorite_shopping(request, ShoppingRecipe, pk,
+                                        mes_text_del, mes_text_no)
 
 
 class SubscribeUserView(views.APIView):
