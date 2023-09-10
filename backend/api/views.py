@@ -23,9 +23,8 @@ from user.models import NewUser, Subscription
 def create_favorite_shopping(request, serializer, pk):
     user = request.user
     serializer = serializer(
-            data={'user': user.id, 'recipe': pk},
-            context={'request': request}
-        )
+        data={'user': user.id, 'recipe': pk},
+        context={'request': request})
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return response.Response(serializer.data,
@@ -170,8 +169,9 @@ def download_list(request):
     user = request.user
     ingredients = IngredientRecipe.objects.values(
         'ingredient__name', 'ingredient__measurement_unit',
-        ).annotate(amount_ingredients=Count('amount')).filter(
-        recipe__shopping_recipe__user=user
+        ).annotate(
+            amount_ingredients=Count('amount')).filter(
+            recipe__shopping_recipe__user=user
         )
     for i, ingredient in enumerate(ingredients):
         name = ingredient["ingredient__name"]

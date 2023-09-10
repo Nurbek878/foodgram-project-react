@@ -261,8 +261,10 @@ class SubscribeUserSerializer(serializers.ModelSerializer):
         subscribe = data['subscribe']
         if subscriber == subscribe:
             raise serializers.ValidationError(
-               {'error':
-                f'Пользователь {subscriber} подписывается на самого себя'}
+                {
+                    'error':
+                    f'Пользователь {subscriber} подписывается на самого себя'
+                }
             )
         return data
 
