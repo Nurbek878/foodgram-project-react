@@ -15,35 +15,10 @@ from api.serializers import (FavoriteRecipeSerializer, IngredientSetSerializer,
                              ShoppingRecipeSerializer,
                              SubscribeReturnSerializer,
                              SubscribeUserSerializer, TagSerializer)
+from api.utils import create_favorite_shopping, delete_favorite_shopping
 from recipe.models import (FavoriteRecipe, Ingredient, IngredientRecipe,
                            Recipe, ShoppingRecipe, Tag)
 from user.models import NewUser, Subscription
-
-
-def create_favorite_shopping(request, serializer, pk):
-    user = request.user
-    serializer = serializer(
-        data={'user': user.id, 'recipe': pk},
-        context={'request': request})
-    serializer.is_valid(raise_exception=True)
-    serializer.save()
-    return response.Response(serializer.data,
-                             status=status.HTTP_201_CREATED)
-
-
-def delete_favorite_shopping(request, model, pk,
-                             mes_text_del, mes_text_no):
-    user = request.user
-    recipe = get_object_or_404(Recipe, id=pk)
-    model_for_delete = model.objects.filter(user=user, recipe=recipe)
-    if model_for_delete.exists():
-        model_for_delete.delete()
-        return response.Response(
-            f'Рецепт {recipe.name} удален из {mes_text_del}',
-            status=status.HTTP_204_NO_CONTENT)
-    return response.Response(
-        f'Рецепта {recipe.name} не было в {mes_text_no}',
-        status=status.HTTP_400_BAD_REQUEST)
 
 
 class NewUserViewset(UserViewSet):
@@ -164,8 +139,7 @@ class SubscriptionUserView(generics.ListAPIView):
 
 @api_view(['GET'])
 def download_list(request):
-    ingredient_note = 'Список ингридиентов для рецептов'
-    unique_names = {}
+    ingredient_note = 'Список ингредиентов для рецептов'
     user = request.user
     ingredients = (
         IngredientRecipe.objects.values(
@@ -175,20 +149,14 @@ def download_list(request):
         .annotate(amount_ingredients=Count("amount"))
         .filter(recipe__shopping_recipe__user=user)
     )
+
     for i, ingredient in enumerate(ingredients):
         name = ingredient["ingredient__name"]
         measurement_unit = ingredient["ingredient__measurement_unit"]
         amount = ingredient["amount_ingredients"]
-        if name in unique_names:
-            unique_names[name]['amount'] += amount
-        else:
-            unique_names[name] = {'amount': amount,
-                                  'measurement_unit': measurement_unit}
-
-    for name, value in unique_names.items():
         ingredient_note += (
             f'\n{name} - '
-            f'{value["amount"]} {value["measurement_unit"]}'
+            f'{amount} {measurement_unit}'
         )
     filename = 'Ingredient_list.pdf'
     response = HttpResponse(ingredient_note, 'Content-Type: application/pdf')
