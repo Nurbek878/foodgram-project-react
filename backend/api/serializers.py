@@ -2,7 +2,7 @@ from rest_framework import serializers, status, validators
 
 from api.fields import Base64ImageField
 from recipe.models import (FavoriteRecipe, Ingredient, IngredientRecipe,
-                           Recipe, ShoppingRecipe, Tag, TagRecipe)
+                           Recipe, ShoppingRecipe, Tag)
 from user.models import NewUser, Subscription
 
 
@@ -129,10 +129,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 
     def create_ingredients_tags(self, recipe,
                                 ingredients_list, tags_list):
-        tags = []
-        for tag in tags_list:
-            TagRecipe(tag=tag, recipe=recipe)
-        TagRecipe.objects.bulk_create(tags)
+        recipe.tags.set(tags_list)
         ingredients = []
         for ingredient in ingredients_list:
             amount = ingredient['amount']

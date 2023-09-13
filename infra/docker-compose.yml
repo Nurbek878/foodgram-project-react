@@ -1,42 +1,46 @@
-version: '3.3'
-name: food
+version: '3'
+name: foodgram
 
 volumes:
-  pg_data:
-  food_static:
+  pg_data_foodgram_base:
+  foodgram_static:
   media:
 
 services:
+
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    env_file: .env
+    image: nurik878/food_frontend
     volumes:
       - ../frontend/:/app/result_build/
+    depends_on:
+      - backend
+
   db:
     image: postgres:13.0-alpine
     env_file: .env
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_data_foodgram_base:/var/lib/postgresql/data
+
   backend:
-    build: ../backend/
+    image: nurik878/food_backend
     env_file: .env
     volumes:
-      - food_static:/app/static/
+      - foodgram_static:/app/static/
       - media:/app/media/
-      - ../backend:/app
     depends_on:
       - db
-  nginx:
-    image: nginx:1.19.3
+
+  gateway:
+    image: nginx:1.19.6
     ports:
-      - "80:80"
+      - 8000:80
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
-      - food_static:/var/html/static/
-      - media:/var/html/media/
+       - ./nginx.conf:/etc/nginx/conf.d/default.conf
+       - ../frontend/build:/usr/share/nginx/html/
+       - ../docs/:/usr/share/nginx/html/api/docs/
+       - foodgram_static:/var/html/static/
+       - media:/var/html/media/
     depends_on:
       - backend
       - frontend
