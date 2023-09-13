@@ -22,7 +22,7 @@ SECRET_KEY='YOUR SECRET_KEY'
 ```
 sudo docker compose up -d
 ```
-Произвести миграции, собрать статике и создать суперпользователя
+Произвести миграции, собрать статике и создать суперпользователя.
 ```
 sudo docker compose exec backend python manage.py migrate
 sudo docker compose exec backend python manage.py collectstatic --no-input
