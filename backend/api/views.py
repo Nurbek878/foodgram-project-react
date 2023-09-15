@@ -1,4 +1,4 @@
-from django.db.models import Count
+from django.db.models import F, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -142,17 +142,16 @@ def download_list(request):
     ingredient_note = 'Список ингредиентов для рецептов'
     user = request.user
     ingredients = (
-        IngredientRecipe.objects.values(
-            "ingredient__name",
-            "ingredient__measurement_unit",
-        )
-        .annotate(amount_ingredients=Count("amount"))
-        .filter(recipe__shopping_recipe__user=user)
+        IngredientRecipe.objects.filter(recipe__shopping_recipe__user=user)
+        .values(
+            name=F('ingredient__name'),
+            unit=F('ingredient__measurement_unit')
+        ).order_by('name').annotate(amount_ingredients=Sum('amount'))
     )
 
     for i, ingredient in enumerate(ingredients):
-        name = ingredient["ingredient__name"]
-        measurement_unit = ingredient["ingredient__measurement_unit"]
+        name = ingredient["name"]
+        measurement_unit = ingredient["unit"]
         amount = ingredient["amount_ingredients"]
         ingredient_note += (
             f'\n{name} - '
